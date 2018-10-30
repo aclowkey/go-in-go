@@ -57,10 +57,13 @@ func (cell Cell) String(printLiberty bool) string {
 
 }
 
+// Grid is a matrix of cells
+type Grid [][]Cell
+
 // Board is responsible for containing the cells, and history
 type Board struct {
 	size            int
-	data            [][]Cell
+	data            Grid
 	moves           int
 	boardHistory    BoardQueue
 	movementHistroy MovementQueue
@@ -68,7 +71,7 @@ type Board struct {
 
 // MakeBoard constructs a board of size size*size
 func MakeBoard(size int) *Board {
-	data := make([][]Cell, size)
+	data := make(Grid, size)
 	for y := range data {
 		data[y] = make([]Cell, size)
 		for x := range data[y] {
@@ -160,7 +163,7 @@ func (board *Board) Move(move *Move) (err error) {
 		board.data[move.x][move.y].piece = move.piece
 		board.moves++
 		board.movementHistroy.Enqueue(move)
-		var historialBoard = make([][]Cell, board.size)
+		var historialBoard = make(Grid, board.size)
 		copy(historialBoard, board.data)
 		board.boardHistory.Enqueue(&historialBoard)
 	} else {
@@ -253,19 +256,20 @@ func (board *Board) String(printLiberty bool, history int) string {
 	for x := 0; x < board.size; x++ {
 		str.WriteString("  " + strconv.Itoa(x) + "   ")
 	}
-	var cells = *board.boardHistory.data[history]
-	str.WriteString(PrintCells(board.size, printLiberty, cells))
+	var grid = *board.boardHistory.data[history]
+	str.WriteString(PrintGrid(printLiberty, &grid))
 	str.WriteString("====================================================\n")
 	return str.String()
 }
 
-func PrintCells(size int, printLiberty bool, cells [][]Cell) string {
+func PrintGrid(printLiberty bool, grid *Grid) string {
 	var str strings.Builder
 	str.WriteString("\n----------------------------------------------------\n")
+	size := len(*grid)
 	for y := 0; y < size; y++ {
 		str.WriteString(strconv.Itoa(y) + "|")
 		for x := 0; x < size; x++ {
-			str.WriteString(cells[x][y].String(printLiberty))
+			str.WriteString((*grid)[x][y].String(printLiberty))
 		}
 		str.WriteString("\n")
 	}

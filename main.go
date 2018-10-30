@@ -15,18 +15,18 @@ type Game struct {
 type MoveResult int
 
 const (
-	OK = iota
-	ILLEGAL
-	KOMI
-	GAME_OVER
+	Ok = iota
+	Illegal
+	Komi
+	GameOver
 )
 
 type GameResult int
 
 const (
-	WHITE_WINS = iota
-	BLACK_WINS
-	DRAW
+	WhiteWins = iota
+	BlackWins
+	Draw
 )
 
 func CreateGame(size int, komi float32) *Game {
@@ -42,21 +42,21 @@ func CreateGame(size int, komi float32) *Game {
 func (game *Game) Move(move *Move) MoveResult {
 	if move.piece != game.turn {
 		fmt.Println("Not your turn!")
-		return ILLEGAL
+		return Illegal
 	}
 	err := game.board.Move(move)
 	if err != nil {
 		// TODO komi r
 		os.Exit(1)
-		return ILLEGAL
-	} else {
-		if game.turn == White {
-			game.turn = Black
-		} else {
-			game.turn = White
-		}
-		return OK
+		return Illegal
 	}
+	if game.turn == White {
+		game.turn = Black
+	} else {
+		game.turn = White
+	}
+	return Ok
+
 }
 func (game *Game) getMove() (move *Move, err error) {
 	var x int
@@ -80,7 +80,7 @@ func (game *Game) Start() {
 			continue
 		}
 		result := game.Move(move)
-		if result != OK {
+		if result != Ok {
 			fmt.Printf("Illegal move. Try again!\n")
 			continue
 		}
@@ -90,11 +90,16 @@ func (game *Game) Start() {
 
 func main() {
 	game := CreateGame(9, 4.5)
-	game.board.Move(&Move{3, 3, White})
-	game.board.Move(&Move{2, 2, White})
-	game.board.Move(&Move{1, 3, White})
-
-	game.board.Move(&Move{1, 4, Black})
+	game.board.Move(&Move{0, 0, White})
+	fmt.Printf(game.board.String(false, 0))
+	fmt.Printf("@@@@@@@@@@@@@@@@@@@@\n")
+	game.board.Move(&Move{1, 0, White})
+	fmt.Printf(game.board.String(false, 0))
+	fmt.Printf(game.board.String(false, 1))
+	fmt.Printf("@@@@@@@@@@@@@@@@@@@@\n")
+	game.board.Move(&Move{2, 0, White})
+	fmt.Printf(game.board.String(false, 0))
+	// game.board.Move(&Move{1, 4, Black})
 	// game.board.Move(&Move{2, 5, Black})
 	// game.board.Move(&Move{3, 4, Black})
 
@@ -103,7 +108,7 @@ func main() {
 	// game.board.Move(&Move{2, 4, White}) // Move number 2
 	// game.board.Move(&Move{2, 3, Black}) // Move number 3
 	// A Ko happens if history[0] history[2]
-	game.board.PrintHistory(true)
+	// game.board.PrintHistory(true)
 	// game.Start()
 
 }

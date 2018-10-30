@@ -37,11 +37,11 @@ func (queue *MovementQueue) Enqueue(move *Move) error {
 		for i := 0; i < queue.index-1; i++ {
 			queue.data[i] = queue.data[i+1]
 		}
-		queue.index -= 1
+		queue.index--
 	}
 	// Move to the next available spot
 	queue.data[queue.index] = move
-	queue.index += 1
+	queue.index++
 	return nil
 }
 
@@ -66,11 +66,11 @@ func (queue *BoardQueue) Enqueue(board *[][]Cell) error {
 		for i := 0; i < queue.index-1; i++ {
 			queue.data[i] = queue.data[i+1]
 		}
-		queue.index -= 1
+		queue.index--
 	}
 	// Move to the next available spot
 	queue.data[queue.index] = board
-	queue.index += 1
+	queue.index++
 
 	return nil
 }

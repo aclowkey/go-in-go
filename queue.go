@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"strings"
 )
 
@@ -62,6 +61,19 @@ func MakeBoardQueue(size int) *BoardQueue {
 }
 
 func (queue *BoardQueue) Enqueue(board *Grid) error {
+	// Make a snapshot of the grid to store as history
+	snapshot := make(Grid, len(*board))
+	for i := 0; i < len(*board); i++ {
+		snapshot[i] = make([]Cell, len(*board))
+		for y := 0; y < len(*board); y++ {
+			toClone := (*board)[i][y]
+			snapshot[i][y] = Cell{
+				toClone.piece,
+				toClone.liberty,
+			}
+		}
+	}
+	// Store only last queue.size moves
 	if queue.index >= queue.size {
 		// Shift left
 		for i := 0; i < queue.index-1; i++ {
@@ -70,19 +82,7 @@ func (queue *BoardQueue) Enqueue(board *Grid) error {
 		queue.index--
 	}
 	// Move to the next available spot
-	queue.data[queue.index] = board
-	fmt.Printf("==========       Storing at       ==========\n")
-	fmt.Printf("[%p] \t = \t %p\n", &queue.data[queue.index], queue.data[queue.index])
-	fmt.Printf("=============================================\n")
+	queue.data[queue.index] = &snapshot
 	queue.index++
-	fmt.Printf("==========Board state after inqueue==========\n")
-	for i := 0; i < len(queue.data); i++ {
-		if queue.data[i] != nil {
-			fmt.Printf("[%p] \t = \t%p\n", &queue.data[i], queue.data[i])
-			cell := queue.data[i]
-			fmt.Println(PrintGrid(false, cell))
-		}
-	}
-	fmt.Printf("=============================================\n")
 	return nil
 }

@@ -120,6 +120,7 @@ func (board *Board) Move(move *Move) (err error) {
 	}
 	enoughLiberty := true
 	ko := false
+	targets := []Move{} // Contains targets to kill
 	if board.data[move.x][move.y].liberty == 0 {
 		// Maybe it kills something and allows for liberty
 		enoughLiberty = false
@@ -145,7 +146,7 @@ func (board *Board) Move(move *Move) (err error) {
 		if cell.piece != move.piece && cell.piece != Empty && cell.liberty == 0 {
 			if board.KillConfirm(nil, Move{newX, newY, cell.piece}) {
 				enoughLiberty = true
-				board.Kill(Move{newX, newY, cell.piece})
+				targets = append(targets, Move{newX, newY, cell.piece})
 			}
 		}
 
@@ -181,6 +182,10 @@ func (board *Board) Move(move *Move) (err error) {
 		}
 	}
 	if enoughLiberty && !ko {
+		// Move is legal, so it could kill
+		for _, move := range targets {
+			board.Kill(move)
+		}
 		// Place the piece
 		board.data[move.x][move.y].piece = move.piece
 		board.moves++

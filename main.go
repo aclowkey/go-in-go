@@ -90,23 +90,19 @@ func (game *Game) Start() {
 
 func main() {
 	game := CreateGame(9, 4.5)
-	game.board.Move(&Move{0, 0, White})
-	fmt.Printf(game.board.String(false, 0))
-	fmt.Printf("@@@@@@@@@@@@@@@@@@@@\n")
-	game.board.Move(&Move{1, 0, White})
-	fmt.Printf(game.board.String(false, 0))
-	fmt.Printf(game.board.String(false, 1))
-	fmt.Printf("@@@@@@@@@@@@@@@@@@@@\n")
-	game.board.Move(&Move{2, 0, White})
-	fmt.Printf(game.board.String(false, 0))
-	// game.board.Move(&Move{1, 4, Black})
-	// game.board.Move(&Move{2, 5, Black})
-	// game.board.Move(&Move{3, 4, Black})
+	game.board.Move(&Move{1, 2, White})
+	game.board.Move(&Move{1, 1, Black})
 
-	// // Ko
-	// game.board.Move(&Move{2, 3, Black}) // Move number 1
-	// game.board.Move(&Move{2, 4, White}) // Move number 2
-	// game.board.Move(&Move{2, 3, Black}) // Move number 3
+	game.board.Move(&Move{0, 3, White})
+	game.board.Move(&Move{0, 0, Black})
+
+	game.board.Move(&Move{0, 1, White}) // This bored
+	game.board.Move(&Move{0, 2, Black})
+
+	game.board.Move(&Move{0, 1, White}) // This move is a Ko!
+	game.board.PrintHistory(false)
+	// game.board.Move(&Move{0, 1, Black})
+
 	// A Ko happens if history[0] history[2]
 	// game.board.PrintHistory(true)
 	// game.Start()

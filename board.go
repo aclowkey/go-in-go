@@ -164,14 +164,14 @@ func (board *Board) Move(move *Move) (err error) {
 		// 2 moves ago
 		if board.moves > 1 {
 			board.data[move.x][move.y].piece = move.piece
-			boardBefore := *board.boardHistory.data[0]
+			boardBefore := *board.boardHistory.data[1]
+			ko = true
 			for i := 0; i < board.size; i++ {
 				for y := 0; y < board.size; y++ {
-					if board.data[i][y].piece == boardBefore[i][y].piece {
-						continue
+					if board.data[i][y].piece != boardBefore[i][y].piece {
+						ko = false
+						break
 					}
-					ko = true
-					break
 				}
 			}
 			if ko {

@@ -264,23 +264,13 @@ func (board *Board) Kill(move Move) {
 	}
 }
 
-func (board *Board) PrintHistory(printLiberty bool) {
-	for i := 0; i < 3; i++ {
-		if board.movementHistroy.data[i] == nil {
-			return
-		}
-		fmt.Printf(board.movementHistroy.data[i].String() + "\n")
-		fmt.Printf(board.String(false, i))
-	}
-}
-
-func (board *Board) String(printLiberty bool, history int) string {
+func (board *Board) String(printLiberty bool) string {
 	var str strings.Builder
-	str.WriteString("=========         Move #" + strconv.Itoa(history) + "    ===================\n")
+	str.WriteString("=========         Move #" + strconv.Itoa(board.moves+1) + "    ===================\n")
 	for x := 0; x < board.size; x++ {
 		str.WriteString("  " + strconv.Itoa(x) + "   ")
 	}
-	var grid = board.boardHistory.data[history]
+	var grid = &board.data
 	str.WriteString(PrintGrid(printLiberty, grid))
 	str.WriteString("====================================================\n")
 	return str.String()

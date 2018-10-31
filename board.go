@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"strconv"
@@ -117,10 +118,11 @@ func (board *Board) Move(move *Move) (err error) {
 		err = fmt.Errorf("cell (%d, %d) is occupied", move.x, move.y)
 		return
 	}
-	placePiece := true
+	enoughLiberty := true
+	ko := false
 	if board.data[move.x][move.y].liberty == 0 {
 		// Maybe it kills something and allows for liberty
-		placePiece = false
+		enoughLiberty = false
 	}
 	// Updating liberty of neighbours
 	for i := range cellOffsets {
@@ -142,30 +144,49 @@ func (board *Board) Move(move *Move) (err error) {
 		// check if it's connected to a piece with liberty
 		if cell.piece != move.piece && cell.piece != Empty && cell.liberty == 0 {
 			if board.KillConfirm(nil, Move{newX, newY, cell.piece}) {
-				placePiece = true
+				enoughLiberty = true
 				board.Kill(Move{newX, newY, cell.piece})
 			}
 		}
 
-		if !placePiece && cell.piece == move.piece {
+		if !enoughLiberty && cell.piece == move.piece {
 			if cell.liberty > 0 {
-				placePiece = true
+				enoughLiberty = true
 			} else {
 				noLiberty := board.KillConfirm(nil, *move)
 				if !noLiberty {
-					placePiece = true
+					enoughLiberty = true
 				}
 			}
 		}
 	}
-	if placePiece {
+	if enoughLiberty {
+		// 2 moves ago
+		if board.moves > 1 {
+			board.data[move.x][move.y].piece = move.piece
+			boardBefore := *board.boardHistory.data[0]
+			for i := 0; i < board.size; i++ {
+				for y := 0; y < board.size; y++ {
+					if board.data[i][y].piece == boardBefore[i][y].piece {
+						continue
+					}
+					ko = true
+					break
+				}
+			}
+			if ko {
+				board.data[move.x][move.y].piece = Empty
+				fmt.Println("KO!")
+				return errors.New("ko")
+			}
+		}
+	}
+	if enoughLiberty && !ko {
 		// Place the piece
 		board.data[move.x][move.y].piece = move.piece
 		board.moves++
 		board.movementHistroy.Enqueue(move)
-		var historialBoard = make(Grid, board.size)
-		copy(historialBoard, board.data)
-		board.boardHistory.Enqueue(&historialBoard)
+		board.boardHistory.Enqueue(&(board.data))
 	} else {
 		// Piece couldn't be placed so give the neighbours their liberties
 		for i := range cellOffsets {
@@ -245,6 +266,9 @@ func (board *Board) Kill(move Move) {
 
 func (board *Board) PrintHistory(printLiberty bool) {
 	for i := 0; i < 3; i++ {
+		if board.movementHistroy.data[i] == nil {
+			return
+		}
 		fmt.Printf(board.movementHistroy.data[i].String() + "\n")
 		fmt.Printf(board.String(false, i))
 	}
@@ -256,8 +280,8 @@ func (board *Board) String(printLiberty bool, history int) string {
 	for x := 0; x < board.size; x++ {
 		str.WriteString("  " + strconv.Itoa(x) + "   ")
 	}
-	var grid = *board.boardHistory.data[history]
-	str.WriteString(PrintGrid(printLiberty, &grid))
+	var grid = board.boardHistory.data[history]
+	str.WriteString(PrintGrid(printLiberty, grid))
 	str.WriteString("====================================================\n")
 	return str.String()
 }

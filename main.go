@@ -3,7 +3,6 @@ package main
 import (
 	"errors"
 	"fmt"
-	"os"
 )
 
 type Game struct {
@@ -47,7 +46,6 @@ func (game *Game) Move(move *Move) MoveResult {
 	err := game.board.Move(move)
 	if err != nil {
 		// TODO komi r
-		os.Exit(1)
 		return Illegal
 	}
 	if game.turn == White {

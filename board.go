@@ -133,12 +133,10 @@ func (board *Board) Move(move *Move) (err error) {
 		err = fmt.Errorf("cell (%d, %d) is occupied", move.x, move.y)
 		return
 	}
-	enoughLiberty := true
-	ko := false
-	targets := []Move{} // Contains targets to kill
+
 	if board.data[move.x][move.y].liberty == 0 {
 		// Maybe it kills something and allows for liberty
-		enoughLiberty = false
+		err = errors.New("Not enough liberty")
 	}
 	// Updating liberty of neighbours
 	for i := range cellOffsets {
@@ -160,28 +158,28 @@ func (board *Board) Move(move *Move) (err error) {
 		// check if it's connected to a piece with liberty
 		if cell.piece != move.piece && cell.piece != Empty && cell.liberty == 0 {
 			if board.KillConfirm(nil, Move{newX, newY, cell.piece}) {
-				enoughLiberty = true
-				targets = append(targets, Move{newX, newY, cell.piece})
+				err = nil
+				board.Kill(Move{newX, newY, cell.piece})
 			}
 		}
 
-		if !enoughLiberty && cell.piece == move.piece {
+		if err != nil && cell.piece == move.piece {
 			if cell.liberty > 0 {
-				enoughLiberty = true
+				err = nil
 			} else {
 				noLiberty := board.KillConfirm(nil, *move)
 				if !noLiberty {
-					enoughLiberty = true
+					err = nil
 				}
 			}
 		}
 	}
-	if enoughLiberty {
+	if err != nil {
 		// 2 moves ago
 		if board.moves > 1 {
 			board.data[move.x][move.y].piece = move.piece
 			boardBefore := *board.boardHistory.data[1]
-			ko = true
+			ko := true
 			for i := 0; i < board.size; i++ {
 				for y := 0; y < board.size; y++ {
 					if board.data[i][y].piece != boardBefore[i][y].piece {
@@ -192,30 +190,19 @@ func (board *Board) Move(move *Move) (err error) {
 			}
 			if ko {
 				board.data[move.x][move.y].piece = Empty
-				return errors.New("ko")
+				err = errors.New("ko")
 			}
 		}
 	}
-	if enoughLiberty && !ko {
-		// Move is legal, so it could kill
-		for _, move := range targets {
-			board.Kill(move)
-		}
+	if err != nil {
 		// Place the piece
 		board.data[move.x][move.y].piece = move.piece
 		board.moves++
 		board.movementHistroy.Enqueue(move)
 		board.boardHistory.Enqueue(&(board.data))
 	} else {
-		// Piece couldn't be placed so give the neighbours their liberties
-		for i := range cellOffsets {
-			newX, newY := move.x+cellOffsets[i][0], move.y+cellOffsets[i][1]
-			if !board.Inbounds(newX, newY) {
-				continue
-			}
-			cell := &board.data[newX][newY]
-			cell.liberty++
-		}
+		// Move is illegal so revert to the last board
+		board.data = board.boardHistory.head.Clone()
 		err = fmt.Errorf("cell (%d, %d) has no liberty", move.x, move.y)
 		return
 	}

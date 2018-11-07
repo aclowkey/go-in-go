@@ -5,18 +5,14 @@ import (
 )
 
 type MovementQueue struct {
-	size  int
-	data  []*Move
-	index int
+	data []*Move
+	head *Move
 }
 
-func MakeMovementQueue(size int) *MovementQueue {
-	data := make([]*Move, size)
-
+func MakeMovementQueue() *MovementQueue {
 	return &MovementQueue{
-		size,
-		data,
-		0,
+		[]*Move{},
+		nil,
 	}
 }
 
@@ -32,47 +28,27 @@ func (queue *MovementQueue) String() string {
 
 // Queue is FIFO
 func (queue *MovementQueue) Enqueue(move *Move) error {
-	if queue.index >= queue.size {
-		// Shift left
-		for i := 0; i < queue.index-1; i++ {
-			queue.data[i] = queue.data[i+1]
-		}
-		queue.index--
-	}
-	// Move to the next available spot
-	queue.data[queue.index] = move
-	queue.index++
+	queue.data = append(queue.data, move)
+	queue.head = move
 	return nil
 }
 
 type BoardQueue struct {
-	size  int
-	data  []*Grid
-	index int
+	data []*Grid
+	head *Grid
 }
 
-func MakeBoardQueue(size int) *BoardQueue {
-	data := make([]*Grid, size)
+func MakeBoardQueue() *BoardQueue {
 	return &BoardQueue{
-		size,
-		data,
-		0,
+		[]*Grid{},
+		nil,
 	}
 }
 
 func (queue *BoardQueue) Enqueue(board *Grid) error {
 	// Make a snapshot of the grid to store as history
 	snapshot := board.Clone()
-	// Store only last queue.size moves
-	if queue.index >= queue.size {
-		// Shift left
-		for i := 0; i < queue.index-1; i++ {
-			queue.data[i] = queue.data[i+1]
-		}
-		queue.index--
-	}
-	// Move to the next available spot
-	queue.data[queue.index] = &snapshot
-	queue.index++
+	queue.data = append(queue.data, &snapshot)
+	queue.head = &snapshot
 	return nil
 }

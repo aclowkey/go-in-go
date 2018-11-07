@@ -110,8 +110,8 @@ func MakeBoard(size int) *Board {
 		size,
 		data,
 		0,
-		*MakeBoardQueue(3),
-		*MakeMovementQueue(3),
+		*MakeBoardQueue(),
+		*MakeMovementQueue(),
 	}
 }
 

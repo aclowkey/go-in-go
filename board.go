@@ -106,11 +106,14 @@ func MakeBoard(size int) *Board {
 			}
 		}
 	}
+	history := *MakeBoardQueue()
+	snapshot := data.Clone()
+	history.Enqueue(&snapshot)
 	return &Board{
 		size,
 		data,
 		0,
-		*MakeBoardQueue(),
+		history,
 		*MakeMovementQueue(),
 	}
 }
@@ -203,8 +206,7 @@ func (board *Board) Move(move *Move) (err error) {
 	} else {
 		// Move is illegal so revert to the last board
 		board.data = board.boardHistory.head.Clone()
-		err = fmt.Errorf("cell (%d, %d) has no liberty", move.x, move.y)
-		return
+		return err
 	}
 	return nil
 }

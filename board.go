@@ -61,6 +61,21 @@ func (cell Cell) String(printLiberty bool) string {
 // Grid is a matrix of cells
 type Grid [][]Cell
 
+func (grid *Grid) Clone() Grid {
+	clone := make(Grid, len(*grid))
+	for i := 0; i < len(*grid); i++ {
+		clone[i] = make([]Cell, len(*grid))
+		for y := 0; y < len(*grid); y++ {
+			toClone := (*grid)[i][y]
+			clone[i][y] = Cell{
+				toClone.piece,
+				toClone.liberty,
+			}
+		}
+	}
+	return clone
+}
+
 // Board is responsible for containing the cells, and history
 type Board struct {
 	size            int

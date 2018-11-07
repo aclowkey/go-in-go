@@ -62,17 +62,7 @@ func MakeBoardQueue(size int) *BoardQueue {
 
 func (queue *BoardQueue) Enqueue(board *Grid) error {
 	// Make a snapshot of the grid to store as history
-	snapshot := make(Grid, len(*board))
-	for i := 0; i < len(*board); i++ {
-		snapshot[i] = make([]Cell, len(*board))
-		for y := 0; y < len(*board); y++ {
-			toClone := (*board)[i][y]
-			snapshot[i][y] = Cell{
-				toClone.piece,
-				toClone.liberty,
-			}
-		}
-	}
+	snapshot := board.Clone()
 	// Store only last queue.size moves
 	if queue.index >= queue.size {
 		// Shift left

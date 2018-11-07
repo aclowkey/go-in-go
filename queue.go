@@ -52,3 +52,17 @@ func (queue *BoardQueue) Enqueue(board *Grid) error {
 	queue.head = &snapshot
 	return nil
 }
+
+func (queue *BoardQueue) IsKo(board *Grid) bool {
+	// Ko is when move n == n-2
+	currentBoard := *board
+	previousBoard := *queue.data[len(queue.data)-2]
+	for i := 0; i < len(currentBoard); i++ {
+		for y := 0; y < len(currentBoard); y++ {
+			if currentBoard[i][y].piece != previousBoard[i][y].piece {
+				return false
+			}
+		}
+	}
+	return true
+}

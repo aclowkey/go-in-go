@@ -177,7 +177,7 @@ func (board *Board) Move(move *Move) (err error) {
 			}
 		}
 	}
-	if err != nil {
+	if err == nil {
 		// 2 moves ago
 		if board.moves > 1 {
 			board.data[move.x][move.y].piece = move.piece
@@ -196,7 +196,7 @@ func (board *Board) Move(move *Move) (err error) {
 			}
 		}
 	}
-	if err != nil {
+	if err == nil {
 		// Place the piece
 		board.data[move.x][move.y].piece = move.piece
 		board.moves++
@@ -205,7 +205,7 @@ func (board *Board) Move(move *Move) (err error) {
 	} else {
 		// Move is illegal so revert to the last board
 		board.data = board.boardHistory.head.Clone()
-		return err
+		return
 	}
 	return nil
 }

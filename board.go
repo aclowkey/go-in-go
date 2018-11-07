@@ -192,7 +192,6 @@ func (board *Board) Move(move *Move) (err error) {
 				}
 			}
 			if ko {
-				board.data[move.x][move.y].piece = Empty
 				err = errors.New("ko")
 			}
 		}

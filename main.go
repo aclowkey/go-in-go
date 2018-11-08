@@ -12,12 +12,17 @@ const port = 9060
 func handleConnection(conn net.Conn) {
 	log.Debugf("Accepted a connection from %s\n", conn.RemoteAddr())
 	defer conn.Close()
-	data := make([]byte, 1024)
-	n, err := conn.Read(data)
-	if err != nil {
-		log.Errorf("Cannot read %+v\n", err)
+	for {
+		buffer := make([]byte, 1024)
+		n, err := conn.Read(buffer)
+		if err != nil {
+			log.Errorf("Cannot read %+v\n", err)
+		} else {
+			data := string(buffer[:n])
+			log.Debugf("Got message: %s", data)
+		}
+
 	}
-	log.Debugf("Got message: %s\n", string(data[:n]))
 }
 
 func main() {

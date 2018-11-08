@@ -15,7 +15,7 @@ func handleConnection(conn net.Conn) {
 	data := make([]byte, 1024)
 	n, err := conn.Read(data)
 	if err != nil {
-		log.Errorf("Cannot read ")
+		log.Errorf("Cannot read %+v\n", err)
 	}
 	log.Debugf("Got message: %s\n", string(data[:n]))
 }

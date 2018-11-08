@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"net"
 
@@ -8,6 +9,21 @@ import (
 )
 
 const port = 9060
+
+type Position struct {
+	x int
+	y int
+}
+
+func parsePosition(data string) (*Position, error) {
+	var x int
+	var y int
+	_, err := fmt.Sscanf(data, "%d %d", &x, &y)
+	if err != nil {
+		return nil, errors.New("Invalid move: should be: x y")
+	}
+	return &Position{x, y}, nil
+}
 
 func handleConnection(conn net.Conn) {
 	log.Debugf("Accepted a connection from %s\n", conn.RemoteAddr())
@@ -19,7 +35,13 @@ func handleConnection(conn net.Conn) {
 			log.Errorf("Cannot read %+v\n", err)
 		} else {
 			data := string(buffer[:n])
-			log.Debugf("Got message: %s", data)
+			var position *Position
+			position, err = parsePosition(data)
+			if err != nil {
+				conn.Write([]byte(fmt.Sprintf("1, invalid move: %+v\n", err)))
+			}
+			log.Debugf("Parsed position: %+v", *position)
+			conn.Write([]byte("0\n"))
 		}
 
 	}

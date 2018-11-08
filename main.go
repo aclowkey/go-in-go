@@ -44,24 +44,34 @@ func getMove(conn net.Conn) (*Position, error) {
 func handleConnection(player1 net.Conn, player2 net.Conn) {
 	log.Debugf("%+v Vs %+v", player1.RemoteAddr(), player2.RemoteAddr())
 	defer player1.Close()
+	defer player2.Close()
+	var whoPlays = "Player 1"
+	var currentPlayer *net.Conn
+	var otherPlayer *net.Conn
 	for {
-		player1.Write([]byte("0, Your move\n"))
-		player2.Write([]byte("0, Wait for your turn\n"))
-		player1Position, err := getMove(player1)
-		log.Debugf("Got position: %+v", *player1Position)
+		// Assigning the proper player
+		if whoPlays == "Player 1" {
+			currentPlayer = &player1
+			otherPlayer = &player2
+		} else {
+			currentPlayer = &player2
+			otherPlayer = &player1
+		}
+		// Instructing players
+		(*currentPlayer).Write([]byte("0, Your move\n"))
+		(*otherPlayer).Write([]byte("0, Wait for your turn\n"))
+		move, err := getMove(*currentPlayer)
 		if err != nil {
-			player1.Write([]byte(fmt.Sprintf("1, Invalid move: %s\n", err)))
+			(*currentPlayer).Write([]byte(fmt.Sprintf("1, Invalid move: %s\n", err)))
 			continue
 		}
-		player1.Write([]byte("0, Wait for your turn"))
-		player2.Write([]byte("0, Your move\n"))
-		player2Position, err := getMove(player2)
-		if err != nil {
-			player1.Write([]byte(fmt.Sprintf("1, Invalid move: %s\n", err)))
-			continue
+		log.Debugf("%s made a move to %+v", whoPlays, *move)
+		// Next player
+		if whoPlays == "Player 2" {
+			whoPlays = "Player 1"
+		} else {
+			whoPlays = "Player 2"
 		}
-		log.Debugf("Got position: %+v", *player2Position)
-
 	}
 }
 

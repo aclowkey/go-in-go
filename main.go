@@ -41,17 +41,27 @@ func getMove(conn net.Conn) (*Position, error) {
 	return position, nil
 }
 
-func handleConnection(conn net.Conn) {
-	log.Debugf("Accepted a connection from %s\n", conn.RemoteAddr())
-	defer conn.Close()
+func handleConnection(player1 net.Conn, player2 net.Conn) {
+	log.Debugf("%+v Vs %+v", player1.RemoteAddr(), player2.RemoteAddr())
+	defer player1.Close()
 	for {
-		position, err := getMove(conn)
+		player1.Write([]byte("0, Your move\n"))
+		player2.Write([]byte("0, Wait for your turn\n"))
+		player1Position, err := getMove(player1)
+		log.Debugf("Got position: %+v", *player1Position)
 		if err != nil {
-			conn.Write([]byte(fmt.Sprintf("1, Invalid move: %s\n", err)))
+			player1.Write([]byte(fmt.Sprintf("1, Invalid move: %s\n", err)))
 			continue
 		}
-		conn.Write([]byte("0\n"))
-		log.Debugf("Got position: %+v", *position)
+		player1.Write([]byte("0, Wait for your turn"))
+		player2.Write([]byte("0, Your move\n"))
+		player2Position, err := getMove(player2)
+		if err != nil {
+			player1.Write([]byte(fmt.Sprintf("1, Invalid move: %s\n", err)))
+			continue
+		}
+		log.Debugf("Got position: %+v", *player2Position)
+
 	}
 }
 
@@ -65,10 +75,17 @@ func main() {
 	}
 	log.Infof("Go-in-go is ready: listening at %d\n", port)
 	for {
-		conn, err := ln.Accept()
+		player1, err := ln.Accept()
 		if err != nil {
 			log.Fatalf("Connection issue: %+v\n", err)
 		}
-		go handleConnection(conn)
+		player1.Write([]byte("Welcome player! Waiting for partner\n"))
+		log.Infof("Player 1 joined. Waiting for player 2..")
+		player2, err := ln.Accept()
+		if err != nil {
+			log.Fatalf("Connection issue: %+v\n", err)
+		}
+		handleConnection(player1, player2)
+
 	}
 }

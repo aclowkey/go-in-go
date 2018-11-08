@@ -131,7 +131,12 @@ func (move *Move) String() string {
 
 // Move contains the logic of validating the move and changing the board in accordance
 func (board *Board) Move(move *Move) (err error) {
-	// First check: Is the cell empty?
+	// First check, is it in bounds
+	if !board.Inbounds(move.x, move.y) {
+		err = fmt.Errorf("(%d, %d) isout of bounds", move.x, move.y)
+		return
+	}
+	// Second check: Is the cell empty?
 	if board.data[move.x][move.y].piece != Empty {
 		err = fmt.Errorf("cell (%d, %d) is occupied", move.x, move.y)
 		return

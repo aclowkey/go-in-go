@@ -25,25 +25,33 @@ func parsePosition(data string) (*Position, error) {
 	return &Position{x, y}, nil
 }
 
+func getMove(conn net.Conn) (*Position, error) {
+	buffer := make([]byte, 1024)
+	n, err := conn.Read(buffer)
+	if err != nil {
+		log.Errorf("Cannot read %+v\n", err)
+	}
+	data := string(buffer[:n])
+	var position *Position
+	position, err = parsePosition(data)
+	if err != nil {
+		return nil, errors.New(fmt.Sprintf("Should be 'x y' got: %s", data))
+	}
+	log.Debugf("Parsed position: %+v", *position)
+	return position, nil
+}
+
 func handleConnection(conn net.Conn) {
 	log.Debugf("Accepted a connection from %s\n", conn.RemoteAddr())
 	defer conn.Close()
 	for {
-		buffer := make([]byte, 1024)
-		n, err := conn.Read(buffer)
+		position, err := getMove(conn)
 		if err != nil {
-			log.Errorf("Cannot read %+v\n", err)
-		} else {
-			data := string(buffer[:n])
-			var position *Position
-			position, err = parsePosition(data)
-			if err != nil {
-				conn.Write([]byte(fmt.Sprintf("1, invalid move: %+v\n", err)))
-			}
-			log.Debugf("Parsed position: %+v", *position)
-			conn.Write([]byte("0\n"))
+			conn.Write([]byte(fmt.Sprintf("1, Invalid move: %s\n", err)))
+			continue
 		}
-
+		conn.Write([]byte("0\n"))
+		log.Debugf("Got position: %+v", *position)
 	}
 }
 

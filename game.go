@@ -51,6 +51,24 @@ func (game *Game) getMove() (move *Move, err error) {
 
 }
 
+func (game *Game) Move(move *Move) MoveResult {
+	if move.piece != game.turn {
+		fmt.Println("Not your turn!")
+		return Illegal
+	}
+	err := game.board.Move(move)
+	if err != nil {
+		// TODO komi r
+		return Illegal
+	}
+	if game.turn == White {
+		game.turn = Black
+	} else {
+		game.turn = White
+	}
+	return Ok
+
+}
 func (game *Game) Start() {
 	gameOver := false
 	for !gameOver {

@@ -18,20 +18,34 @@ class Cell extends Component {
 class Board extends Component {
     constructor(props){
         super(props);
+        let size = parseInt(this.props.size)
         this.state = {
-            size: this.props.size,
-            data: emptySquare(this.props.size)
+            size: size,
+            data: emptySquare(size)
         }
     }
+
     render(){
+        let board=[]
+        for(let i = 0; i < this.state.size; i++){
+            let row = [] 
+            for(let j = 0; j < this.state.size; j++ ){
+                let piece = this.state.data[i][j].toString();
+                row.push(<Cell piece={piece}></Cell>);
+            }
+            board.push(
+                <div style={{display: 'inline-block'}}>
+                    {row}
+                </div>
+            )
+        }
         return (
-           <ul>
-               <li><Cell piece="White"></Cell></li>
-               <li><Cell piece="Black"></Cell></li>
-               <li><Cell piece="Green"></Cell></li>
-           </ul> 
+            <div>
+                {board}
+            </div>
         )
     }
+
 }
 
 

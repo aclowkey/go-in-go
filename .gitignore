@@ -1,3 +1,4 @@
 .vscode
 .vscode/**
+go-ui/node_modules/**
 go-in-go

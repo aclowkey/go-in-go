@@ -1,9 +1,13 @@
 import React, { Component } from 'react';
+import Cell from './Board.js'
 
 class App extends Component {
   render() {
     return (
-      <h1>Let's Go! </h1>
+      <div>
+        <h1>Let's Go! </h1>
+        <Cell piece="White"></Cell>
+      </div>
     );
   }
 }

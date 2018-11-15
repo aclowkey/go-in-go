@@ -1,4 +1,9 @@
 .square {
     width: 100px;
     height: 100px;
+    text-align: center;
+    display: table-cell;
+    vertical-align: middle;
+    border: 1px lightgray;
+    border-style: solid;
 }

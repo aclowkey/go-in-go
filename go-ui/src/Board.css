@@ -4,6 +4,20 @@
     text-align: center;
     display: table-cell;
     vertical-align: middle;
+    background-color: #663300;
     border: 1px lightgray;
     border-style: solid;
+}
+
+.piece {
+    height: 55px;
+    width: 55px;
+    border-radius: 50%;
+    display: inline-block;
+}
+.white {
+    background-color: white
+}
+.black {
+    background-color: black
 }

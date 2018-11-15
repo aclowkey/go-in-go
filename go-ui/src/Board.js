@@ -2,9 +2,13 @@ import React, { Component } from "react";
 import "./Board.css";
 
 function Cell(props) {
+  let innerPeace;
+  if(props.piece != "Empty"){
+    innerPeace = <div className={"piece "+props.piece}></div>
+  }
   return (
     <div className="square" onClick={props.onClick}>
-      {props.piece}
+        {innerPeace}
     </div>
   );
 }
@@ -23,11 +27,11 @@ class Board extends Component {
   cellClicked(x, y) {
     return () => {
       let data = this.state.data.slice();
-      if (data[y][x] !== "") {
+      if (data[y][x] !== "Empty") {
         alert("You can't do that!");
         return;
       }
-      data[y][x] = this.state.whitesTurn ? "White" : "Black";
+      data[y][x] = this.state.whitesTurn ? "white" : "black";
       this.setState({
         data: data,
         whitesTurn: !this.state.whitesTurn
@@ -61,7 +65,7 @@ class Board extends Component {
 }
 
 function emptySquare(size) {
-  return new Array(size).fill("").map(() => new Array(size).fill(""));
+  return new Array(size).fill("Empty").map(() => new Array(size).fill("Empty"));
 }
 
 export default Board;

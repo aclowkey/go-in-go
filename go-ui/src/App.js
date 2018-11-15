@@ -1,12 +1,11 @@
 import React, { Component } from 'react';
-import Board from './Board.js'
+import Game from './Game.js'
 
 class App extends Component {
   render() {
     return (
       <div>
-        <h1>Let's Go! </h1>
-        <Board size="5"></Board>
+        <Game size="9"></Game>
       </div>
     );
   }

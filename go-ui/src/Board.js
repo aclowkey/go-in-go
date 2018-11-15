@@ -23,7 +23,7 @@ class Board extends Component {
   cellClicked(x, y) {
     return () => {
       let data = this.state.data.slice();
-      if (data[y][x] !== 0) {
+      if (data[y][x] !== "") {
         alert("You can't do that!");
         return;
       }
@@ -61,7 +61,7 @@ class Board extends Component {
 }
 
 function emptySquare(size) {
-  return new Array(size).fill(0).map(() => new Array(size).fill(0));
+  return new Array(size).fill("").map(() => new Array(size).fill(""));
 }
 
 export default Board;

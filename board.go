@@ -61,23 +61,15 @@ func (cell Cell) String(printLiberty bool) string {
 // Grid is a matrix of cells
 type Grid [][]Cell
 
-func (board *Board) Json() string {
-	var str strings.Builder
-	str.WriteString("[")
-	for y := 0; y < board.size; y++ {
-		if y > 0 {
-			str.WriteString(", ")
+func (board *Board) Pieces() [][]string {
+	data := make([][]string, board.size)
+	for y := range data {
+		data[y] = make([]string, board.size)
+		for x := range data[y] {
+			data[y][x] = board.data[y][x].piece.String()
 		}
-		str.WriteString("[")
-		for x := 0; x < board.size; x++ {
-			if x > 0 {
-				str.WriteString(", ")
-			}
-			str.WriteString("'" + board.data[y][x].piece.String() + "'")
-		}
-		str.WriteString("]")
 	}
-	return str.String()
+	return data
 }
 
 func (grid *Grid) Clone() Grid {

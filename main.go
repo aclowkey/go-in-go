@@ -1,6 +1,6 @@
 package main
 
 func main() {
-	server := &TcpServer{9600}
+	server := MakeHTTPServer(9060)
 	server.start()
 }

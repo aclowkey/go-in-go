@@ -17,7 +17,6 @@ func (server *TcpServer) start() {
 	ln, err := net.Listen("tcp", fmt.Sprintf(":%d", server.port))
 	defer ln.Close()
 	if err != nil {
-		log.Fatalf("Failed to start server: %+v\n", err)
 		return
 	}
 	log.Infof("Go-in-go is ready: listening at %d\n", server.port)
@@ -35,11 +34,6 @@ func (server *TcpServer) start() {
 		handleConnection(player1, player2)
 
 	}
-}
-
-type Position struct {
-	x int
-	y int
 }
 
 func parsePosition(data string) (*Position, error) {

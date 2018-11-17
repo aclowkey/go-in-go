@@ -61,6 +61,17 @@ func (cell Cell) String(printLiberty bool) string {
 // Grid is a matrix of cells
 type Grid [][]Cell
 
+func (board *Board) Pieces() [][]string {
+	data := make([][]string, board.size)
+	for y := range data {
+		data[y] = make([]string, board.size)
+		for x := range data[y] {
+			data[y][x] = board.data[y][x].piece.String()
+		}
+	}
+	return data
+}
+
 func (grid *Grid) Clone() Grid {
 	clone := make(Grid, len(*grid))
 	for i := 0; i < len(*grid); i++ {

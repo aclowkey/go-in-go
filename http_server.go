@@ -100,7 +100,8 @@ func (server *HTTPServer) start() {
 		}
 
 		c.JSON(200, gin.H{
-			"turn": gameSession.game.turn,
+			"turn":  gameSession.game.turn,
+			"board": gameSession.game.board.Pieces(),
 		})
 	})
 	r.POST("/game/:id", func(c *gin.Context) {
@@ -129,7 +130,8 @@ func (server *HTTPServer) start() {
 		gameSession.player2id = &sessionID
 		c.Header("sessionID", strconv.Itoa(sessionID))
 		c.JSON(200, gin.H{
-			"turn": gameSession.game.turn.String(),
+			"turn":  gameSession.game.turn.String(),
+			"board": gameSession.game.board.Pieces(),
 		})
 	})
 
@@ -190,7 +192,10 @@ func (server *HTTPServer) start() {
 			})
 			return
 		}
-		fmt.Fprintln(gin.DefaultWriter, gameSession.game.board.String(false))
+		c.JSON(200, gin.H{
+			"turn":  gameSession.game.turn,
+			"board": gameSession.game.board.Pieces(),
+		})
 	})
 
 	r.Run(fmt.Sprintf(":%d", server.port))

@@ -20,6 +20,12 @@ func (session *GameSession) isReady() bool {
 	return session.player2id != nil
 }
 
+// Position defines a place on the board
+type Position struct {
+	X int `json:"x" binding:"required"`
+	Y int `json:"y" binding:"required"`
+}
+
 // HTTPServer is a Go-in-go server in HTTP
 type HTTPServer struct {
 	port  int
@@ -126,5 +132,66 @@ func (server *HTTPServer) start() {
 			"turn": gameSession.game.turn.String(),
 		})
 	})
+
+	r.POST("/game/:id/move", func(c *gin.Context) {
+		gameIDParam := c.Param("id")
+		gameID, err := strconv.Atoi(gameIDParam)
+		if err != nil {
+			c.JSON(400, gin.H{
+				"message": "Invalid game ID",
+			})
+			return
+		}
+		gameSession, ok := server.games[gameID]
+		if !ok {
+			c.JSON(404, gin.H{
+				"message": fmt.Sprintf("Game %d not found", gameID),
+			})
+			return
+		}
+
+		sessionIDHeader := c.GetHeader("sessionID")
+		sessionID, err := strconv.Atoi(sessionIDHeader)
+		if err != nil {
+			// Either expired, or not authorized, or invalid
+			c.JSON(404, gin.H{
+				"message": "Not allowed to access the game",
+			})
+			return
+		}
+		if gameSession.game.turn == White {
+			if sessionID != *gameSession.player1id {
+				c.JSON(400, gin.H{
+					"message": "It's white player turn",
+				})
+				return
+			}
+		} else {
+			if sessionID != *gameSession.player2id {
+				c.JSON(400, gin.H{
+					"message": "It's black player turn",
+				})
+				return
+			}
+		}
+		position := Position{}
+		err = c.ShouldBindJSON(&position)
+		if err != nil {
+			c.JSON(400, gin.H{
+				"message": "Invalid request: should have 'x' and 'y'",
+			})
+			return
+		}
+		move := &Move{position.X, position.Y, gameSession.game.turn}
+		result := gameSession.game.Move(move)
+		if result == Illegal {
+			c.JSON(400, gin.H{
+				"message": "Invalid move",
+			})
+			return
+		}
+		fmt.Fprintln(gin.DefaultWriter, gameSession.game.board.String(false))
+	})
+
 	r.Run(fmt.Sprintf(":%d", server.port))
 }

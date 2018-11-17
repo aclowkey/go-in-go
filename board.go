@@ -118,12 +118,6 @@ func MakeBoard(size int) *Board {
 	}
 }
 
-// Position defines a place on the board
-type Position struct {
-	x int
-	y int
-}
-
 // Move defines where a player placed a piece in form of x, y
 type Move struct {
 	x     int

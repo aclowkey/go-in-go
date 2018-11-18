@@ -1,4 +1,5 @@
 .vscode
 .vscode/**
+go-ui/node_modules/**
 go-in-go
 go-in-go.exe

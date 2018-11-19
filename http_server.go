@@ -100,8 +100,8 @@ func (server *HTTPServer) start() {
 		}
 
 		c.JSON(200, gin.H{
-			"turn":  gameSession.game.turn,
-			"board": gameSession.game.board.Pieces(),
+			"turn":  gameSession.game.Turn,
+			"board": gameSession.game.Board.Pieces(),
 		})
 	})
 	r.POST("/game/:id", func(c *gin.Context) {
@@ -130,8 +130,8 @@ func (server *HTTPServer) start() {
 		gameSession.player2id = &sessionID
 		c.Header("sessionID", strconv.Itoa(sessionID))
 		c.JSON(200, gin.H{
-			"turn":  gameSession.game.turn.String(),
-			"board": gameSession.game.board.Pieces(),
+			"turn":  gameSession.game.Turn.String(),
+			"board": gameSession.game.Board.Pieces(),
 		})
 	})
 
@@ -161,7 +161,7 @@ func (server *HTTPServer) start() {
 			})
 			return
 		}
-		if gameSession.game.turn == White {
+		if gameSession.game.Turn == White {
 			if sessionID != *gameSession.player1id {
 				c.JSON(400, gin.H{
 					"message": "It's white player turn",
@@ -184,7 +184,7 @@ func (server *HTTPServer) start() {
 			})
 			return
 		}
-		move := &Move{position.X, position.Y, gameSession.game.turn}
+		move := &Move{position.X, position.Y, gameSession.game.Turn}
 		result, err := gameSession.game.Move(move)
 		if result != Ok {
 			c.JSON(400, gin.H{
@@ -193,8 +193,8 @@ func (server *HTTPServer) start() {
 			return
 		}
 		c.JSON(200, gin.H{
-			"turn":  gameSession.game.turn,
-			"board": gameSession.game.board.Pieces(),
+			"turn":  gameSession.game.Turn,
+			"board": gameSession.game.Board.Pieces(),
 		})
 	})
 

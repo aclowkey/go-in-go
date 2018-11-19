@@ -71,7 +71,7 @@ func handleConnection(player1 net.Conn, player2 net.Conn) {
 	var otherPlayer *net.Conn
 	for {
 		// Assigning the proper player
-		if game.turn == White {
+		if game.Turn == White {
 			currentPlayer = &player1
 			otherPlayer = &player2
 		} else {
@@ -80,19 +80,19 @@ func handleConnection(player1 net.Conn, player2 net.Conn) {
 		}
 
 		// Displaying board
-		player1.Write([]byte(game.board.String(false)))
-		player2.Write([]byte(game.board.String(false)))
+		player1.Write([]byte(game.Board.String(false)))
+		player2.Write([]byte(game.Board.String(false)))
 
 		// Instructing players
-		(*currentPlayer).Write([]byte("0, " + game.turn.String() + "'s turn\n"))
+		(*currentPlayer).Write([]byte("0, " + game.Turn.String() + "'s turn\n"))
 		(*otherPlayer).Write([]byte("0, Wait for your turn\n"))
 		move, err := getMove(*currentPlayer)
 		if err != nil {
 			(*currentPlayer).Write([]byte(fmt.Sprintf("1, Invalid move: %s\n", err)))
 			continue
 		}
-		log.Debugf("%s tried to move to %+v", game.turn.String(), *move)
-		result, err := game.Move(&Move{(*move).X, (*move).Y, game.turn})
+		log.Debugf("%s tried to move to %+v", game.Turn.String(), *move)
+		result, err := game.Move(&Move{(*move).X, (*move).Y, game.Turn})
 		if result != Ok {
 			(*currentPlayer).Write([]byte(fmt.Sprintf("1, Invalid move: %v\n", err.Error())))
 		}

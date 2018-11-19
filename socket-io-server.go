@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"math/rand"
 	"net/http"
+	"regexp"
 	"strconv"
 	"time"
 
@@ -68,9 +69,45 @@ func (server *SocketIOServer) Start() {
 	log.Level = log.LevelDebug
 
 	socketServer.On("connection", server.handleConnection)
+
 	http.Handle("/", socketServer)
+	http.HandleFunc("/game/", server.handleGame())
 	log.Infof("Listening for socket-io on :%d\n", server.port)
 	log.Fatal(http.ListenAndServe(fmt.Sprintf(":%d", server.port), nil))
+}
+
+func (server *SocketIOServer) handleGame() http.HandlerFunc {
+	pattern, _ := regexp.Compile("^\\/game\\/(?P<GameID>[^\\/]+)?$")
+	return func(w http.ResponseWriter, r *http.Request) {
+		matches := pattern.FindStringSubmatch(r.URL.String())
+		if len(matches) != 2 {
+			w.WriteHeader(http.StatusBadRequest)
+			return
+		}
+		gameID := matches[1]
+		if gameID == "" {
+			keys := make([]string, len(server.gameSessions))
+			i := 0
+			for k := range server.gameSessions {
+				keys[i] = k
+				i++
+			}
+			bytes, err := json.Marshal(keys)
+			if err != nil {
+				w.WriteHeader(http.StatusInternalServerError)
+				return
+			}
+			w.Write(bytes)
+		} else {
+			game := server.gameSessions[gameID].game
+			bytes, err := json.Marshal(game)
+			if err != nil {
+				w.WriteHeader(http.StatusInternalServerError)
+				return
+			}
+			w.Write(bytes)
+		}
+	}
 }
 
 func (server *SocketIOServer) handleConnection(so socketio.Socket) {
@@ -116,7 +153,7 @@ func (server *SocketIOServer) handleConnection(so socketio.Socket) {
 	}
 
 	// Game is ready, handle movement logic
-	so.Emit("game_started", gameSession.game.board.Pieces())
+	so.Emit("game_started", gameSession.game.Board.Pieces())
 	so.On("move", server.handleMove(gameID, gameSession, player))
 }
 
@@ -134,7 +171,7 @@ func (server *SocketIOServer) handleMove(gameID string, gameSession *IOGameSessi
 		if result == Ok {
 			gameSession.boardChanged()
 			player.socket.Emit("message", fmt.Sprintf("Thank you mr, %s", player.name))
-			log.Debugf(game.board.String(false))
+			log.Debugf(game.Board.String(false))
 			log.Debugf("[%s] Player %s moved %s\n", gameID, player.piece)
 		} else {
 			player.socket.Emit("error", err.Error())

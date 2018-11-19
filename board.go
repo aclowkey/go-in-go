@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"os"
@@ -27,6 +28,17 @@ const (
 	// Black is the second player
 	Black
 )
+
+func (p *Piece) MarshalJSON() ([]byte, error) {
+	switch *p {
+	case White:
+		return []byte("\"White\""), nil
+	case Black:
+		return []byte("\"Black\""), nil
+	default:
+		return nil, errors.New("Only supports black and white")
+	}
+}
 
 // Cell has a piece which occupies it, and a number of liberties available to it
 type Cell struct {
@@ -94,6 +106,14 @@ type Board struct {
 	moves           int
 	boardHistory    BoardQueue
 	movementHistroy MovementQueue
+}
+
+func (board *Board) MarshalJSON() ([]byte, error) {
+	bytes, e := json.Marshal(board.Pieces())
+	if e != nil {
+		return nil, e
+	}
+	return bytes, nil
 }
 
 // MakeBoard constructs a board of size size*size

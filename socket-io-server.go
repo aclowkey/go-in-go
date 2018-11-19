@@ -47,9 +47,9 @@ func (gameSession *IOGameSession) ready() bool {
 		gameSession.player2 != nil
 }
 
-func (gameSession *IOGameSession) boardChanged() {
-	gameSession.player1.socket.Emit("board_changed")
-	gameSession.player2.socket.Emit("board_changed")
+func (gameSession *IOGameSession) boardChanged(gameID string) {
+	gameSession.player1.socket.Emit("board_changed", gameID)
+	gameSession.player2.socket.Emit("board_changed", gameID)
 }
 
 func MakeSocketIOServer(port int) *SocketIOServer {
@@ -99,7 +99,12 @@ func (server *SocketIOServer) handleGame() http.HandlerFunc {
 			}
 			w.Write(bytes)
 		} else {
-			game := server.gameSessions[gameID].game
+			session, ok := server.gameSessions[gameID]
+			if !ok {
+				w.WriteHeader(http.StatusNotFound)
+				return
+			}
+			game := session.game
 			bytes, err := json.Marshal(game)
 			if err != nil {
 				w.WriteHeader(http.StatusInternalServerError)
@@ -169,7 +174,7 @@ func (server *SocketIOServer) handleMove(gameID string, gameSession *IOGameSessi
 
 		result, err := game.Move(&Move{position.X, position.Y, player.piece})
 		if result == Ok {
-			gameSession.boardChanged()
+			gameSession.boardChanged(gameID)
 			player.socket.Emit("message", fmt.Sprintf("Thank you mr, %s", player.name))
 			log.Debugf(game.Board.String(false))
 			log.Debugf("[%s] Player %s moved %s\n", gameID, player.piece)

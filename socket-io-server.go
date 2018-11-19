@@ -177,10 +177,14 @@ func (server *SocketIOServer) handleConnection(so socketio.Socket) {
 		switch player.piece {
 		case White:
 			gameSession.player1 = nil
-			gameSession.player2.socket.Emit("message", "Other player left")
+			if !gameSession.abandoned() {
+				gameSession.player2.socket.Emit("message", "Other player left")
+			}
 		case Black:
 			gameSession.player2 = nil
-			gameSession.player1.socket.Emit("message", "Other player left")
+			if !gameSession.abandoned() {
+				gameSession.player1.socket.Emit("message", "Other player left")
+			}
 		}
 		if gameSession.abandoned() {
 			log.Debugf("[%s] Both players left. Closing the game\n", gameID)

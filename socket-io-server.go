@@ -47,6 +47,11 @@ func (gameSession *IOGameSession) ready() bool {
 		gameSession.player2 != nil
 }
 
+func (gameSession *IOGameSession) abandoned() bool {
+	return gameSession.player1 == nil &&
+		gameSession.player2 == nil
+}
+
 func (gameSession *IOGameSession) boardChanged(gameID string) {
 	gameSession.player1.socket.Emit("board_changed", gameID)
 	gameSession.player2.socket.Emit("board_changed", gameID)
@@ -164,6 +169,13 @@ func (server *SocketIOServer) handleConnection(so socketio.Socket) {
 	// Game is ready, handle movement logic
 	so.Emit("game_started", gameSession.game.Board.Pieces())
 	so.On("move", server.handleMove(gameID, gameSession, player))
+	so.On("disconnection", func(so *socketio.Socket) {
+		log.Debugf("[%s] Player %s disconnected\n", gameID, player.piece)
+		if gameSession.abandoned() {
+			log.Debugf("[%s] Both players left. Closing the game\n", gameID)
+			delete(server.gameSessions, gameID)
+		}
+	})
 }
 
 func (server *SocketIOServer) handleMove(gameID string, gameSession *IOGameSession, player *Player) interface{} {

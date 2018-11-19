@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"math/rand"
 	"net/http"
@@ -19,7 +20,7 @@ type SocketIOServer struct {
 }
 
 type Player struct {
-	name   string
+	id     string
 	piece  Piece
 	socket socketio.Socket
 }
@@ -30,16 +31,19 @@ type IOGameSession struct {
 	player2 *Player
 }
 
-func (gameSession *IOGameSession) join(player *Player) (hasPlace bool) {
-	hasPlace = true
+func (gameSession *IOGameSession) join(so *socketio.Socket) (*Player, error) {
+	var player *Player
+	playerid := "player-" + strconv.Itoa(rand.New(rand.NewSource(time.Now().UnixNano())).Int())
 	if gameSession.player1 == nil {
+		player = &Player{playerid, White, *so}
 		gameSession.player1 = player
 	} else if gameSession.player2 == nil {
+		player = &Player{playerid, Black, *so}
 		gameSession.player2 = player
 	} else {
-		hasPlace = false
+		return nil, errors.New("can't join room")
 	}
-	return hasPlace
+	return player, nil
 }
 
 func (gameSession *IOGameSession) ready() bool {
@@ -150,15 +154,14 @@ func (server *SocketIOServer) handleConnection(so socketio.Socket) {
 		so.Emit("error", "Cannot find game")
 		return
 	}
-	player = &Player{"Player 2", Black, so}
-	hasPlace := gameSession.join(player)
-	if !hasPlace {
-		log.Debugf("User attempted to join an already full game: %s\n", gameID)
+	player, err := gameSession.join(&so)
+	if err != nil {
+		log.Debugf("User attempted to join an already full game: %s\n", gameID, err)
 		so.Emit("error", "Room already full")
 		return
 	}
 
-	log.Debugf("[%s] Player joined game", gameID)
+	log.Debugf("[%s] Player(%s) %s joined game", gameID, player.piece, player.id)
 
 	// Waiting for second player to join so we'll be ready
 	// Maybe better approach is the server will notify itself on game_started?
@@ -170,7 +173,15 @@ func (server *SocketIOServer) handleConnection(so socketio.Socket) {
 	so.Emit("game_started", gameSession.game.Board.Pieces())
 	so.On("move", server.handleMove(gameID, gameSession, player))
 	so.On("disconnection", func(so *socketio.Socket) {
-		log.Debugf("[%s] Player %s disconnected\n", gameID, player.piece)
+		log.Debugf("[%s] Player(%s) %s disconnected\n", gameID, player.piece, player.id)
+		switch player.piece {
+		case White:
+			gameSession.player1 = nil
+			gameSession.player2.socket.Emit("message", "Other player left")
+		case Black:
+			gameSession.player2 = nil
+			gameSession.player1.socket.Emit("message", "Other player left")
+		}
 		if gameSession.abandoned() {
 			log.Debugf("[%s] Both players left. Closing the game\n", gameID)
 			delete(server.gameSessions, gameID)
@@ -191,7 +202,6 @@ func (server *SocketIOServer) handleMove(gameID string, gameSession *IOGameSessi
 		result, err := game.Move(&Move{position.X, position.Y, player.piece})
 		if result == Ok {
 			gameSession.boardChanged(gameID)
-			player.socket.Emit("message", fmt.Sprintf("Thank you mr, %s", player.name))
 			log.Debugf(game.Board.String(false))
 			log.Debugf("[%s] Player %s moved %s\n", gameID, player.piece)
 		} else {

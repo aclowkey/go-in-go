@@ -79,77 +79,81 @@ func (server *SocketIOServer) Start() {
 func (server *SocketIOServer) handleGame() http.HandlerFunc {
 	pattern, _ := regexp.Compile("^\\/game\\/(?P<GameID>[^\\/]+)?$")
 	return func(w http.ResponseWriter, r *http.Request) {
-		matches := pattern.FindStringSubmatch(r.URL.String())
-		if len(matches) != 2 {
-			w.WriteHeader(http.StatusBadRequest)
-			return
-		}
-		gameID := matches[1]
-		if gameID == "" {
-			keys := make([]string, len(server.gameSessions))
-			i := 0
-			for k := range server.gameSessions {
-				keys[i] = k
-				i++
-			}
-			bytes, err := json.Marshal(keys)
-			if err != nil {
-				w.WriteHeader(http.StatusInternalServerError)
+		switch r.Method {
+		case http.MethodGet:
+			matches := pattern.FindStringSubmatch(r.URL.String())
+			if len(matches) != 2 {
+				w.WriteHeader(http.StatusBadRequest)
 				return
 			}
+			gameID := matches[1]
+			if gameID == "" {
+				keys := make([]string, len(server.gameSessions))
+				i := 0
+				for k := range server.gameSessions {
+					keys[i] = k
+					i++
+				}
+				bytes, err := json.Marshal(keys)
+				if err != nil {
+					w.WriteHeader(http.StatusInternalServerError)
+					return
+				}
+				w.Write(bytes)
+			} else {
+				session, ok := server.gameSessions[gameID]
+				if !ok {
+					w.WriteHeader(http.StatusNotFound)
+					return
+				}
+				game := session.game
+				bytes, err := json.Marshal(game)
+				if err != nil {
+					w.WriteHeader(http.StatusInternalServerError)
+					return
+				}
+				w.Write(bytes)
+			}
+		case http.MethodPut:
+			r1 := rand.New(rand.NewSource(time.Now().UnixNano()))
+			gameID := strconv.Itoa(r1.Int())
+			server.gameSessions[gameID] = &IOGameSession{
+				CreateGame(9, 4.5), nil, nil,
+			}
+			type GameCreated struct {
+				GameID string `json:"gameId"`
+			}
+			bytes, _ := json.Marshal(&GameCreated{gameID})
 			w.Write(bytes)
-		} else {
-			session, ok := server.gameSessions[gameID]
-			if !ok {
-				w.WriteHeader(http.StatusNotFound)
-				return
-			}
-			game := session.game
-			bytes, err := json.Marshal(game)
-			if err != nil {
-				w.WriteHeader(http.StatusInternalServerError)
-				return
-			}
-			w.Write(bytes)
+		default:
+			w.WriteHeader(http.StatusMethodNotAllowed)
 		}
 	}
 }
 
 func (server *SocketIOServer) handleConnection(so socketio.Socket) {
-	// Handle user connecting to server by either joining or creating a game
-	var gameID string
+	// Handle user connecting to server by either joining a game
 	var player *Player
 	gameIDParams, ok := so.Request().URL.Query()["gameID"]
-	if ok && len(gameIDParams) == 1 {
-		// Joining an existing game
-		gameID = gameIDParams[0]
-		gameSession, found := server.gameSessions[gameID]
-		if !found {
-			log.Debugf("User attempted to join an invalid game: %s\n", gameID)
-			so.Emit("error", "Cannot find game")
-			return
-		}
-		player = &Player{"Player 2", Black, so}
-		hasPlace := gameSession.join(player)
-		if !hasPlace {
-			log.Debugf("User attempted to join an already full game: %s\n", gameID)
-			so.Emit("error", "Room already full")
-			return
-		}
-
-		log.Debugf("[%s] Player joined game", gameID)
-	} else {
-		// Creating a new game - TODO limit capacity?
-		r1 := rand.New(rand.NewSource(time.Now().UnixNano()))
-		gameID = strconv.Itoa(r1.Int())
-		server.gameSessions[gameID] = &IOGameSession{
-			CreateGame(9, 4.5), nil, nil,
-		}
-		player = &Player{"Player 1", White, so}
-		server.gameSessions[gameID].join(player)
-		so.Emit("message", fmt.Sprintf("gameid=\"%s\"", gameID))
+	if !ok || len(gameIDParams) != 1 {
+		so.Emit("error", "Invalid request. Must provide gameID parameter")
 	}
-	gameSession := server.gameSessions[gameID]
+	gameID := gameIDParams[0]
+	gameSession, found := server.gameSessions[gameID]
+	if !found {
+		log.Debugf("User attempted to join an invalid game: %s\n", gameID)
+		so.Emit("error", "Cannot find game")
+		return
+	}
+	player = &Player{"Player 2", Black, so}
+	hasPlace := gameSession.join(player)
+	if !hasPlace {
+		log.Debugf("User attempted to join an already full game: %s\n", gameID)
+		so.Emit("error", "Room already full")
+		return
+	}
+
+	log.Debugf("[%s] Player joined game", gameID)
 
 	// Waiting for second player to join so we'll be ready
 	// Maybe better approach is the server will notify itself on game_started?

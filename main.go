@@ -1,6 +1,6 @@
 package main
 
 func main() {
-	server := &SocketIOServer{9070}
+	server := MakeSocketIOServer(9070)
 	server.Start()
 }

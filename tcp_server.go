@@ -92,9 +92,9 @@ func handleConnection(player1 net.Conn, player2 net.Conn) {
 			continue
 		}
 		log.Debugf("%s tried to move to %+v", game.turn.String(), *move)
-		result := game.Move(&Move{(*move).X, (*move).Y, game.turn})
+		result, err := game.Move(&Move{(*move).X, (*move).Y, game.turn})
 		if result != Ok {
-			(*currentPlayer).Write([]byte(fmt.Sprintf("1, Invalid move: %v\n", result)))
+			(*currentPlayer).Write([]byte(fmt.Sprintf("1, Invalid move: %v\n", err.Error())))
 		}
 	}
 }

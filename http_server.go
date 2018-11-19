@@ -185,10 +185,10 @@ func (server *HTTPServer) start() {
 			return
 		}
 		move := &Move{position.X, position.Y, gameSession.game.turn}
-		result := gameSession.game.Move(move)
-		if result == Illegal {
+		result, err := gameSession.game.Move(move)
+		if result != Ok {
 			c.JSON(400, gin.H{
-				"message": "Invalid move",
+				"message": err.Error(),
 			})
 			return
 		}

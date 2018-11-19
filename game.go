@@ -51,22 +51,21 @@ func (game *Game) getMove() (move *Move, err error) {
 
 }
 
-func (game *Game) Move(move *Move) MoveResult {
+func (game *Game) Move(move *Move) (MoveResult, error) {
 	if move.piece != game.turn {
-		fmt.Println("Not your turn!")
-		return Illegal
+		return Illegal, errors.New("Not your turn")
 	}
 	err := game.board.Move(move)
 	if err != nil {
 		// TODO komi r
-		return Illegal
+		return Illegal, err
 	}
 	if game.turn == White {
 		game.turn = Black
 	} else {
 		game.turn = White
 	}
-	return Ok
+	return Ok, nil
 
 }
 func (game *Game) Start() {
@@ -77,7 +76,7 @@ func (game *Game) Start() {
 			fmt.Printf("Invalid move: %s", err.Error())
 			continue
 		}
-		result := game.Move(move)
+		result, err := game.Move(move)
 		if result != Ok {
 			fmt.Printf("Illegal move. Try again!\n")
 			continue
